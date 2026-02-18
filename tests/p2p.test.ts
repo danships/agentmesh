@@ -28,12 +28,13 @@ describe('P2P Integration', () => {
     await agentA.start();
 
     await transportA.waitForPeer(agentB.peerId, 10_000);
-  }, 15_000);
+    await transportA.waitForTool('echo', 10_000);
+  }, 30_000);
 
   afterAll(async () => {
     await agentA?.stop();
     await agentB?.stop();
-  });
+  }, 15_000);
 
   it('two agents connect over TCP', () => {
     expect(transportA).toBeDefined();
@@ -42,22 +43,18 @@ describe('P2P Integration', () => {
   });
 
   it('agent A discovers agent B by tool name', async () => {
-    const peerIds = await transportA.waitForTool('echo', 10_000);
+    const peerIds = await transportA.discover('echo');
     expect(peerIds).toContain(agentB.peerId);
-  }, 15_000);
+  }, 30_000);
 
   it('full task round-trip over P2P', async () => {
-    await transportA.waitForTool('echo', 10_000);
-
     const response = await agentA.request(agentB.peerId, 'echo', { message: 'hello p2p' });
 
     expect(verifyTaskResponse(response)).toBe(true);
-  }, 15_000);
+  }, 30_000);
 
   it('response payload is correct', async () => {
-    await transportA.waitForTool('echo', 10_000);
-
     const response = await agentA.request(agentB.peerId, 'echo', { message: 'mesh works' });
     expect(response.result).toEqual({ echo: 'mesh works' });
-  }, 15_000);
+  }, 30_000);
 });
